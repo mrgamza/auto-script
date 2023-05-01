@@ -1,0 +1,8 @@
+type= user
+start data >>
+Tap(946,617)
+UserWait(10000)
+Tap(704,499)
+UserWait(30000)
+Tap(660,580)
+UserWait(10000)
