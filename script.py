@@ -23,7 +23,7 @@ def select_menu():
     menu_array.append('-')
     menu_array.append('X. All Stop')
     menu_array.append('C. Check Run')
-    title = 'AutoScript - v%s' % environment.VERSION
+    title = f'AutoScript - v{environment.VERSION}'
     util.draw_box(title, menu_array)
 
     # noinspection PyBroadException
@@ -31,8 +31,8 @@ def select_menu():
         select = input('Select : ')
     except:
         select = None
-
-    if select is None or select == '':
+        
+    if not select:
         for game in GAME.keys():
             start(game)
     else:
@@ -41,9 +41,9 @@ def select_menu():
 
         commands = list(select)
         for element in commands:
-            if element == 'c' or element == 'C':
+            if element.lower == 'c':
                 check()
-            elif element == 'x' or element == 'X':
+            elif element.lower == 'x':
                 for game in GAME.keys():
                     stop(game)
             elif type(element) == int or element.isdigit():
@@ -91,8 +91,8 @@ def stop(game_name, device_name=None, when_menu_call=True):
     else:
         running_device = device_name
 
-    print_array.append('Game : %s' % game_name)
-    print_array.append('Device : %s' % running_device)
+    print_array.append(f'Game : {game_name}')
+    print_array.append(f'Device : {running_device}')
 
     if running_device is not None:
         kill_count, kill_messages = stop_script(running_device)
@@ -122,8 +122,8 @@ def check():
         package_name = game_data[1]
         running_device = find_device(package_name)
 
-        print_array.append('Game : %s' % game)
-        print_array.append('Device : %s' % running_device)
+        print_array.append(f'Game : {game}')
+        print_array.append(f'Device : {running_device}')
 
         if running_device is not None:
             running_count, running_pids = check_script(running_device)
@@ -157,14 +157,14 @@ def find_device(package_name):
 def is_running(package_name, device):
     if environment.BACKGROUND_RUN_CHECK:
         # 앱이 실제로 동작하고 있는지 체크
-        running_check_commend = 'adb -s %s shell ps' % device
+        running_check_commend = f'adb -s {device} shell ps'
         call_result = util.get_call_result(running_check_commend).decode("utf-8")
         for line in call_result.splitlines():
             if package_name in line:
                 return True
     else:
         # 앱이 독작은 하는데, 백그라운드 인지 체크
-        running_check_commend = 'adb -s %s shell dumpsys window windows' % device
+        running_check_commend = f'adb -s {device} shell dumpsys window windows'
         call_result = util.get_call_result(running_check_commend).decode('utf-8')
         for line in call_result.splitlines():
             if 'mCurrentFocus' in line and package_name in line:
@@ -175,7 +175,7 @@ def is_running(package_name, device):
 
 def is_install(package_name, device):
     # 앱이 설치가 되어 있는지 체크
-    running_check_commend = 'adb -s %s shell pm list packages -f' % device
+    running_check_commend = f'adb -s {device} shell pm list packages -f'
     call_result = util.get_call_result(running_check_commend).decode("utf-8")
     for line in call_result.splitlines():
         if package_name in line:
@@ -185,14 +185,14 @@ def is_install(package_name, device):
 
 
 def get_device_size(device):
-    size_check_commend = 'adb -s %s shell wm size' % device
+    size_check_commend = f'adb -s {device} shell wm size'
     call_result = util.get_call_result(size_check_commend).decode("utf-8")
     divide = call_result.split(':')
     if len(divide) == 2:
         return parse_screen_size(divide[1])
 
     # 오래된 단말들을 위하여 예전방식으로 한번 더 호출
-    size_check_commend = 'adb -s %s shell dumpsys window' % device
+    size_check_commend = f'adb -s {device} shell dumpsys window'
     call_result = util.get_call_result(size_check_commend).decode("utf-8")
     find_result = list(filter(lambda x: 'Display:' in x, call_result.splitlines()))
     for line in find_result:
@@ -244,18 +244,18 @@ def make_script(filename, device_size):
             divide = line.split(' ')
             resize_x = int(int(divide[1]) * width_ratio)
             resize_y = int(int(divide[2]) * height_ratio)
-            output_file.write('Tap(%s,%s)\n' % (resize_x, resize_y))
+            output_file.write(f'Tap({resize_x},{resize_y})\n')
         elif 'SLEEP' in line:
             divide = line.split(' ')
-            output_file.write('UserWait(%s)\n' % int(divide[1]))
+            output_file.write(f'UserWait({int(divide[1])})\n')
         elif 'REPEAT' in line:
             divide = line.split(' ')
             count = int(divide[4])
             for repeat in range(0, count):
                 resize_x = int(int(divide[1]) * width_ratio)
                 resize_y = int(int(divide[2]) * height_ratio)
-                output_file.write('Tap(%s,%s)\n' % (resize_x, resize_y))
-                output_file.write('UserWait(%s)\n' % int(divide[3]))
+                output_file.write(f'Tap({resize_x},{resize_y})\n')
+                output_file.write(f'UserWait({int(divide[3])})\n')
 
     output_file.close()
 
@@ -280,7 +280,7 @@ def stop_script(device):
         if environment.MONKEY in line:
             replace = " ".join(line.split())
             divide = replace.split(' ')
-            kill_commend = 'adb -s %s shell kill %s' % (device, str(divide[1]))
+            kill_commend = f'adb -s {device} shell kill {str(divide[1])}'
             subprocess.call(kill_commend, shell=True)
             kill_count += 1
             kill_messages.append('Stop : ' + divide[1])
@@ -291,7 +291,7 @@ def stop_script(device):
 def check_script(device):
     running_pids = list()
 
-    get_commend = 'adb -s %s shell ps' % device
+    get_commend = 'adb -s {device} shell ps'
     call_result = util.get_call_result(get_commend).decode("utf-8")
     running_count = 0
     for line in call_result.splitlines():
